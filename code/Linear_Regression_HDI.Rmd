@@ -1,0 +1,346 @@
+---
+title: "Regressione Multipla"
+author: "Matteo Altieri"
+date: "2023-08-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#DATA IMPORT
+```{r}
+setwd("C:/Users/matte/OneDrive/Desktop/Bicocca/1.8 Data Science Lab/R progetto")
+DS = read.csv("dati_2021.csv", sep=',')
+str(DS)
+```
+
+
+##CORRELATION COVARIATES ANALYSIS
+
+#--GDI Group--
+
+```{r}
+GDI_DS <- data.frame(DS$hdi, DS$gdi, DS$country)
+```
+
+```{r}
+require(skimr);
+require(e1071);
+Range <- function(x) {max(x) - min(x)}
+cv <- function(x) {round(sd(x)/mean(x), 3)}
+Sk <- function(x){round(e1071::skewness(x), 3)}
+my_skim <- skim_with(base = sfl(),
+numeric = sfl(hist = NULL, range = Range, cv = cv, skewness=Sk))
+my_skim( GDI_DS )
+```
+
+```{r}
+pairs( GDI_DS%>% select_if(is.numeric),
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+require(ggm);
+require(dplyr);
+corrplot::corrplot(cor( GDI_DS %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+cor(GDI_DS$DS.hdi, GDI_DS$DS.gdi)
+```
+
+```{r}
+stati_da_escludere <- c("Yemen", "Afghanistan")
+df_senza_stati <- GDI_DS[!GDI_DS$DS.country %in% stati_da_escludere, ]
+pairs( df_senza_stati%>% select_if(is.numeric),
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+require(ggm);
+require(dplyr);
+corrplot::corrplot(cor( df_senza_stati %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+cor(df_senza_stati$DS.hdi, df_senza_stati$DS.gdi)
+```
+
+```{r}
+mod_GDI <- lm(df_senza_stati$DS.hdi ~ df_senza_stati$DS.gdi,data=df_senza_stati)
+summary(mod_GDI)
+```
+
+#--IHDI Group-- 
+
+```{r}
+IHDI_DS <- data.frame(DS$hdi, DS$ihdi, DS$coef_ineq, DS$loss, DS$ineq_le, DS$ineq_edu, DS$ineq_inc)
+require(skimr);
+require(e1071);
+Range <- function(x) {max(x) - min(x)}
+cv <- function(x) {round(sd(x)/mean(x), 3)}
+Sk <- function(x){round(e1071::skewness(x), 3)}
+my_skim <- skim_with(base = sfl(),
+numeric = sfl(hist = NULL, range = Range, cv = cv, skewness=Sk))
+my_skim( IHDI_DS )
+```
+
+
+```{r}
+pairs( IHDI_DS,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+require(ggm);
+require(dplyr);
+corrplot::corrplot(cor( IHDI_DS %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+```
+
+#--GII Group-- 
+
+```{r}
+GII_DS <- data.frame(DS$hdi, DS$gii, DS$mmr, DS$abr, DS$se_f, DS$se_m, DS$pr_f, DS$lfpr_f, DS$lfpr_m)
+require(skimr);
+require(e1071);
+Range <- function(x) {max(x) - min(x)}
+cv <- function(x) {round(sd(x)/mean(x), 3)}
+Sk <- function(x){round(e1071::skewness(x), 3)}
+my_skim <- skim_with(base = sfl(),
+numeric = sfl(hist = NULL, range = Range, cv = cv, skewness=Sk))
+my_skim( GII_DS )
+```
+
+```{r}
+pairs( GII_DS[, 1:5] ,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+pairs( GII_DS[, c(1, 6:9)] ,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+S<-cov( GII_DS %>% select_if(is.numeric) )
+Rp<- parcor( S )
+require(ggm);
+require(dplyr);
+corrplot::corrplot(cor( GII_DS %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+```
+
+```{r}
+GII_ds_log <- GII_DS
+GII_ds_log$DS.mmr <- log(GII_ds_log$DS.mmr)
+pairs( GII_ds_log,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+S<-cov( GII_ds_log %>% select_if(is.numeric) )
+Rp<- parcor( S )
+corrplot::corrplot(cor( GII_ds_log %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+```
+
+```{r}
+mod_GII <- lm(GII_ds_log$DS.hdi ~ . ,data=GII_ds_log)
+require(faraway);
+vif(mod_GII)
+```
+
+```{r}
+step(mod_GII)
+```
+
+```{r}
+summary(mod_GII)
+```
+
+#--PHDI Group-- 
+
+```{r}
+PHDI_DS <- data.frame(DS$hdi, DS$phdi, DS$diff_hdi_phdi, DS$co2_prod, DS$mf)
+require(skimr);
+require(e1071);
+Range <- function(x) {max(x) - min(x)}
+cv <- function(x) {round(sd(x)/mean(x), 3)}
+Sk <- function(x){round(e1071::skewness(x), 3)}
+my_skim <- skim_with(base = sfl(),
+numeric = sfl(hist = NULL, range = Range, cv = cv, skewness=Sk))
+my_skim( PHDI_DS )
+```
+
+```{r}
+pairs( PHDI_DS,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+S<-cov( PHDI_DS %>% select_if(is.numeric) )
+Rp<- parcor( S )
+corrplot::corrplot(cor( PHDI_DS %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+```
+
+```{r}
+PHDI_ds_log <- PHDI_DS
+PHDI_ds_log$DS.diff_hdi_phdi <-log(PHDI_ds_log$DS.diff_hdi_phdi)
+PHDI_ds_log$DS.co2_prod <-log(PHDI_ds_log$DS.co2_prod)
+PHDI_ds_log$DS.mf <-log(abs(PHDI_ds_log$DS.mf))
+```
+
+```{r}
+pairs( PHDI_ds_log,
+      panel = panel.smooth,
+      lower.panel = NULL,
+      main = "Body",
+      )
+S<-cov( PHDI_ds_log %>% select_if(is.numeric) )
+Rp<- parcor( S )
+corrplot::corrplot(cor( PHDI_ds_log %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+```
+
+```{r}
+mod_PHDI <- lm(PHDI_ds_log$DS.hdi ~ .,data=PHDI_ds_log)
+vif(mod_PHDI)
+```
+```{r}
+step(mod_PHDI)
+```
+
+```{r}
+mod_PHDI <- lm(PHDI_ds_log$DS.hdi ~ +PHDI_DS$DS.co2_prod +PHDI_DS$DS.mf,data=PHDI_ds_log)
+summary(mod_PHDI)
+```
+
+##COVARIATES SELECTION
+
+```{r}
+DS1 <- data.frame(DS$country, DS$hdi, DS$gdi, DS$coef_ineq, DS$gii, DS$mmr, DS$abr, DS$se_f, DS$co2_prod, DS$mf, DS$loss, DS$ineq_edu, DS$ineq_le)
+stati_da_escludere <- c("Yemen", "Afghanistan")
+DS1 <- DS1[!DS1$DS.country %in% stati_da_escludere, ]
+DS1$DS.mmr <- log(DS1$DS.mmr)
+names(DS1)[6] <- "DS.log(mmr)"
+DS1$DS.co2_prod <-log(DS1$DS.co2_prod)
+names(DS1)[9] <- "DS.log(co2_prod)"
+DS1$DS.mf <-log(abs(DS1$DS.mf))
+names(DS1)[10] <- "DS.log(mf)"
+```
+
+```{r}
+corrplot::corrplot(cor( DS1 %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+S<-cov( DS1 %>% select_if(is.numeric) )
+Rp<- parcor( S )
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+
+```
+
+```{r}
+columns_to_remove <- c("DS.loss","DS.country")
+DS1 <- DS1[, !(names(DS1) %in% columns_to_remove)]
+
+corrplot::corrplot(cor( DS1 %>% select_if(is.numeric) ),
+                   main="Raw corr", type="upper")
+S<-cov( DS1 %>% select_if(is.numeric) )
+Rp<- parcor( S )
+corrplot::corrplot(Rp,
+                   main="Partial corr", type="upper")
+```
+
+```{r}
+mod1 <- lm(DS1$DS.hdi ~ . ,data=DS1)
+require(faraway);
+vif(mod1)
+summary(mod1)
+```
+
+```{r}
+#PLOT RESIDUAL
+plot(mod1$residuals,
+     main = "PLOT RESIDUAL",
+     xlab = "Observation number",
+     ylab = "Residual",
+     col="blue",
+     pch=16,
+     cex=0.4)
+abline(h=0, col = "red")
+#RESIDUAL AGAINST FITTED
+plot(mod1$fitted,
+     mod1$residuals,
+     main = "RESIDUAL AGAINST FITTED",
+     xlab = "Fitted values",
+     ylab = "Residuals",
+     col = "blue",
+     pch=16,cex=0.4)
+#RESIDUAL AGAINST COVARIATES
+for (i in 1:ncol(DS1)) { #OCCHIO ALLE COLONNE DEL DATASET
+  plot(DS1[,i],
+       mod1$residuals,
+       main = "RESIDUAL AGAINST COV",
+       xlab = colnames(DS1)[i],
+       ylab = "Residuals",
+       col="blue",
+       pch=6,cex=0.4)
+}
+```
+
+```{r}
+step(mod1)
+```
+```{r}
+mod2 <- lm(DS1$DS.hdi ~ +DS1$`DS.log(mf)` +DS1$`DS.log(mmr)` +DS1$DS.gii +DS1$DS.se_f +DS1$`DS.log(co2_prod)` +DS1$DS.ineq_edu, data=DS1)
+vif(mod2)
+summary(mod2)
+```
+
+```{r}
+#leverages mod1
+X=model.matrix(mod2) 
+lev=hat(X)
+p=mod2$rank
+n=7
+plot(mod2$fitted.values, lev,xlab="Fitted values", ylab="Leverages", main="Plot", pch=16, col='black')
+abline(h=2*p/n, lty=2, col='red')
+lev[lev> 2*p/n]
+watchout_points_lev = lev[ which( lev > 2 * p/n  ) ]
+watchout_ids_lev =  which( lev > 2 * p/n ) 
+points( mod2$fitted.values[ watchout_ids_lev ], watchout_points_lev, col = 'red', pch = 16 )
+id_to_keep_Lev = !( 1:n %in% watchout_ids_lev )
+```
+
+```{r}
+Cdist=cooks.distance(mod2)
+watchout_ids_Cdist=which(Cdist>4/(n-p))
+watchout_Cdist=Cdist[watchout_ids_Cdist]
+watchout_Cdist
+plot(mod2$fitted.values,Cdist,pch=16,xlab="Fitted values",ylab="Cook's distance",main="Cook' distance plot")
+points(mod2$fitted.values[watchout_ids_Cdist],Cdist[watchout_ids_Cdist],col='green',pch=16)
+id_to_keep_Hook = !( 1:n %in% watchout_ids_Cdist )
+```
+
+```{r}
+plot( mod2$fit, mod2$res, xlab = "Fitted", ylab = "Residuals", 
+      main = "Residuals vs Fitted Values", pch = 16 )
+abline( h = 0, lwd = 2, lty = 2, col = 'red' )
+qqnorm( mod2$res, ylab = "Raw Residuals", pch = 16 )
+qqline( mod2$res )
+```
+
+
+
+
+
+

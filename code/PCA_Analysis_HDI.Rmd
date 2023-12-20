@@ -1,0 +1,90 @@
+---
+title: "Analisi PCA"
+author: "Matteo Altieri"
+date: "2023-09-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("C:/Users/matte/OneDrive/Desktop/Bicocca/1.8 Data Science Lab/R progetto")
+DS = read.csv("dati_2021.csv", sep=',')
+str(DS)
+```
+
+```{r}
+DS$continent=factor(DS$continent)
+DS <- DS[, c("hdi", colnames(DS)[!colnames(DS) %in% "hdi"])]
+str(DS)
+```
+
+```{r}
+require(skimr);
+require(e1071);
+Range <- function(x) {max(x) - min(x)}
+cv <- function(x) {round(sd(x)/mean(x), 3)}
+Sk <- function(x){round(e1071::skewness(x), 3)}
+my_skim <- skim_with(base = sfl(),
+numeric = sfl(hist = NULL, range = Range, cv = cv, skewness=Sk))
+my_skim( DS )
+```
+
+```{r}
+require(ggm)
+require(dplyr)
+require(corrplot)
+cor_matrix <- cor(DS %>% select_if(is.numeric))
+cor_matrix[abs(cor_matrix) <= 0.3] <- 0
+corrplot(cor_matrix,
+         main = "Correlazioni con valore assoluto > 0.3",
+         type = "upper")
+cor_with_hdi <- cor_matrix["hdi", ]
+covariates <- names(cor_with_hdi[abs(cor_with_hdi) < 0.3])
+cat("Covariate con correlazione inferiore a 0.3 con 'hdi':\n")
+cat(covariates, sep = "\n")
+```
+
+```{r}
+columns_to_remove <- c("ineq_inc", "lfpr_f", "lfpr_m", "pr_f", "pr_m")
+DS <- DS[, !(names(DS) %in% columns_to_remove)]
+```
+
+```{r}
+z_scores <- scale(select_if(DS, is.numeric))
+threshold <- 3
+outliers <- apply(abs(z_scores), 2, function(x) x > threshold)
+DS_senza_outliers <- DS[!rowSums(outliers), ]
+```
+
+```{r}
+data_normalized <- scale(DS_senza_outliers %>% select_if(is.numeric))
+corr_matrix <- cor(data_normalized)
+data.pca <- princomp(corr_matrix)
+summary(data.pca)
+```
+```{r}
+data.pca$loadings[, 1:2]
+```
+
+```{r}
+library("factoextra")
+fviz_pca_var(data.pca, col.var = "black")
+```
+
+```{r}
+fviz_cos2(data.pca, choice = "var", axes = 1:2)
+```
+
+```{r}
+fviz_pca_var(data.pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "green"),
+            repel = TRUE)
+```
+
+
+
+
+
