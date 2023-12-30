@@ -15,10 +15,17 @@ The following report aims to show a comprehensive analysis of the human developm
 
 ## Data
 
-We used the data of HDI index only for 2021 
+We used the dataset containing all composite indecis that can be found and download at this [page](https://hdr.undp.org/data-center/documentation-and-downloads)
 
 ## Results 
 
+- Exploration of Indices: The study explored various indices related to human development, emphasizing the significance of certain metrics over others.
+- Correlation Analysis: Identified a spectrum of correlations among metrics, prompting questions about the necessity and redundancy of components in the HDI computation.
+- Introduction of RHDI: Introduced the Reformed Human Development Index (RHDI) as an alternative to HDI, relying on life expectancy and income while excluding education to address concerns about entanglement.
+- Comparative Analysis: Conducted a comparative analysis between HDI and RHDI, revealing less pronounced correlations between RHDI and HDI compared to their correlations with other metrics.
+- Shifts in Country Positions: RHDI showed a significant shift in the positions of countries, indicating the potential bias introduced by the entanglement of education with economic factors.
+- Comprehensive Index Development: Developed a comprehensive index incorporating environmental indicators, CO2 emissions, ecological footprint, and GII, providing a more nuanced perspective on well-being.
+- Global Disparities: Highlighted significant disparities in developing nations, particularly in pollution, women's rights, and overall well-being, calling for global attention to address these critical issues.
 
 ## Authors 
 
