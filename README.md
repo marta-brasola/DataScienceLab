@@ -8,8 +8,17 @@ set of indices describing a nation’s well-being. We are searching for a more c
 
 ## Research Questions
 
+- 
 
 ## Data
 
+We used the data of HDI index only for 2021 
 
 ## Results 
+
+
+## Authors 
+
+- Matteo Altieri 
+- Marta Brasola
+- Alessandro 
